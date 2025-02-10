@@ -1,5 +1,5 @@
 - name: Setup web server on Amazon Linux 2
-  hosts: "{{ target_host }}"  # Jenkins יספק את כתובת ה-EC2
+  hosts: production
   become: true
   tasks:
     - name: Update all packages

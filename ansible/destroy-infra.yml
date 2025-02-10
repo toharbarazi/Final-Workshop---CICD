@@ -1,0 +1,12 @@
+---
+- name: delete
+  hosts: producion
+  gather_facts: no
+  tasks:
+    - name: מחיקת EC2 instance ב-AWS
+      ec2_instance:
+        instance_ids: "{{ ec2_instance_id }}"
+        region: us-west-2
+        state: absent
+        wait: yes
+
