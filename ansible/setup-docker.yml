@@ -5,29 +5,17 @@
   gather_facts: yes
 
   tasks:
-    - name: Install epel-release
-      ansible.builtin.yum:
-        name: epel-release
-        state: present
-
-    - name: Install required packages (git, python-pip, yum-utils)
-      ansible.builtin.yum:
+    - name: Install required packages (git, python3-pip, dnf-utils)
+      ansible.builtin.dnf:
         name:
           - git
           - python3-pip
-          - yum-utils
+          - dnf-utils
         state: present
 
-    - name: Add Docker repository
-      ansible.builtin.shell: "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo"
-
-    - name: Install Docker and dependencies
-      ansible.builtin.yum:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-compose
+    - name: Install Docker on Amazon Linux 2023
+      ansible.builtin.dnf:
+        name: docker
         state: present
 
     - name: Start Docker service
@@ -36,28 +24,40 @@
         state: started
         enabled: yes
 
-    - name: Copy SSH key to the EC2 instance
+    - name: Add Docker Compose binary (optional if needed)
+      ansible.builtin.shell: |
+        curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+
+    - name: Create the .ssh directory if it doesn't exist
+      ansible.builtin.file:
+        path: /home/centos/.ssh
+        state: directory
+        mode: '0700'
+        owner: ec2-user
+        group: ec2-user
+
+    - name: Copy SSH private key to the EC2 instance
       ansible.builtin.copy:
-        src: /path/to/your/local/ssh_key
+        src: "/home/ec2-user/Final-Workshop---CICD/tohar-keypair.pem"  # Ensure the correct path to your key
         dest: /home/centos/.ssh/id_rsa
         mode: '0600'
-        owner: centos
-        group: centos
+        owner: ec2-user
+        group: ec2-user
 
     - name: Clone the app repository from GitHub
       ansible.builtin.git:
         repo: 'https://github.com/toharbarazi/Final-Workshop---CICD.git'
         dest: /home/centos/app
-        version: master
+        version: main
 
     - name: Build Docker image
       ansible.builtin.shell:
-        chdir: /home/centos/app
-        cmd: docker build -t your-app-name .
+        chdir: "/home/centos/app/docker"
+        cmd: docker build -t my-app .
 
     - name: Run Docker container
       ansible.builtin.shell:
-        chdir: /home/centos/app
-        cmd: docker run -d -p 80:80 your-app-name
-
+        chdir: /home/centos/app/docker
+        cmd: docker run -d -p 80:80 my-app
 
