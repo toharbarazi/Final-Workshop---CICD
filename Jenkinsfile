@@ -5,6 +5,12 @@ pipeline {
         AWS_SECRET_ACCESS_KEY = credentials('aws-credentials')
     }
     stages {
+        stage('Checkout') {
+            steps {
+                // משיכת הקוד מ-repository GitHub
+                git 'https://github.com/toharbarazi/Final-Workshop---CICD.git'
+            }
+        }
         stage('Launch EC2') {
             steps {
                 script {
