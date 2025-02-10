@@ -1,0 +1,36 @@
+- name: Setup web server
+  hosts: "{{ target_host }}"  # Jenkins יספק את כתובת ה-EC2
+  become: true
+  tasks:
+    - name: Install required packages
+      yum:
+        name:
+          - epel-release
+          - git
+          - python3-pip
+          - yum-utils
+        state: present
+
+    - name: Install Docker
+      shell: |
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        yum install -y docker-ce docker-ce-cli containerd.io docker-compose
+      args:
+        executable: /bin/bash
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Clone application repository
+      git:
+        repo: "https://github.com/your-repo.git"
+        dest: /home/ec2-user/app
+
+    - name: Build and run Docker container
+      shell: |
+        cd /home/ec2-user/app/docker
+        docker-compose up -d
+
