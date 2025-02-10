@@ -1,6 +1,6 @@
 ---
 - name: Setup Docker environment on EC2 instance
-  hosts: "{{ target_host }}"
+  hosts: production
   become: true
   gather_facts: yes
 

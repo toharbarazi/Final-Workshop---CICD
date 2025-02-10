@@ -1,3 +1,3 @@
 [production]
-prod-server ansible_host=54.83.65.141 ansible_user=centos 
+prod-server ansible_host=54.83.65.141 ansible_user=ec2-user ansible_ssh_private_key_file="/home/ec2-user/Final-Workshop---CICD/tohar-keypair.pem"
 
