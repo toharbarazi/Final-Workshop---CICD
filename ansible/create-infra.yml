@@ -1,28 +1,34 @@
-- name: Setup web server
+- name: Setup web server on Amazon Linux 2
   hosts: "{{ target_host }}"  # Jenkins יספק את כתובת ה-EC2
   become: true
   tasks:
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Enable Amazon Linux Extras for Docker
+      shell: amazon-linux-extras enable docker
+
     - name: Install required packages
       yum:
         name:
-          - epel-release
           - git
-          - python3-pip
-          - yum-utils
+          - python3
+          - docker
         state: present
 
-    - name: Install Docker
-      shell: |
-        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-        yum install -y docker-ce docker-ce-cli containerd.io docker-compose
-      args:
-        executable: /bin/bash
-
-    - name: Start Docker
+    - name: Start Docker service
       service:
         name: docker
         state: started
         enabled: yes
+
+    - name: Add ec2-user to Docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
 
     - name: Clone application repository
       git:
@@ -33,4 +39,5 @@
       shell: |
         cd /home/ec2-user/app/docker
         docker-compose up -d
-
+      args:
+        executable: /bin/bash
