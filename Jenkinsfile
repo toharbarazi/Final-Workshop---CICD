@@ -9,7 +9,7 @@ pipeline {
             steps {
                 script {
                     def instanceInfo = sh(script: '''
-                        aws ec2 describe-instances --filters "Name=tag:Name,Values=production" --query "Reservations[*].Instances[*].PublicIpAddress" --output text
+                        aws ec2 describe-instances --filters "Name=tag:Name,Values=production-tohar" --query "Reservations[*].Instances[*].PublicIpAddress" --output text
                     ''', returnStdout: true).trim()
                     env.TARGET_HOST = instanceInfo
                 }
