@@ -7,8 +7,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // משיכת הקוד מ-repository GitHub
-                git 'https://github.com/toharbarazi/Final-Workshop---CICD.git'
+                git url: 'https://github.com/toharbarazi/Final-Workshop---CICD.git', credentialsId: 'your-git-credentials-id'
             }
         }
         stage('Launch EC2') {
@@ -21,6 +20,23 @@ pipeline {
                 }
             }
         }
+        stage('Check SSH Connectivity') {
+            steps {
+                script {
+                    // ניסוי להתחבר לשרת דרך SSH כדי לבדוק אם ההתחברות מצליחה
+                    def sshCheck = sh(script: """
+                        ssh -o StrictHostKeyChecking=no -i ${EC2_SSH_KEY_PATH} ec2-user@${TARGET_HOST} 'echo "SSH connection successful"'
+                    """, returnStdout: true, returnStatus: true)
+
+                    // אם לא הצליח להתחבר, יוחזר קוד שגיאה 1
+                    if (sshCheck != 0) {
+                        error "Failed to connect to EC2 instance via SSH"
+                    } else {
+                        echo "SSH connection successful"
+                    }
+                }
+            }
+        }
         stage('Run Ansible Playbook') {
             steps {
                 sshagent(['ec2-key']) {
@@ -29,5 +45,12 @@ pipeline {
             }
         }
     }
+    post {
+        success {
+            echo 'Build completed successfully!'
+        }
+        failure {
+            echo 'Build failed. Please check the logs for details.'
+        }
+    }
 }
-
