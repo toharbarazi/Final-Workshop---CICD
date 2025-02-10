@@ -1,0 +1,63 @@
+---
+- name: Setup Docker environment on EC2 instance
+  hosts: "{{ target_host }}"
+  become: true
+  gather_facts: yes
+
+  tasks:
+    - name: Install epel-release
+      ansible.builtin.yum:
+        name: epel-release
+        state: present
+
+    - name: Install required packages (git, python-pip, yum-utils)
+      ansible.builtin.yum:
+        name:
+          - git
+          - python3-pip
+          - yum-utils
+        state: present
+
+    - name: Add Docker repository
+      ansible.builtin.shell: "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo"
+
+    - name: Install Docker and dependencies
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose
+        state: present
+
+    - name: Start Docker service
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Copy SSH key to the EC2 instance
+      ansible.builtin.copy:
+        src: /path/to/your/local/ssh_key
+        dest: /home/centos/.ssh/id_rsa
+        mode: '0600'
+        owner: centos
+        group: centos
+
+    - name: Clone the app repository from GitHub
+      ansible.builtin.git:
+        repo: 'https://github.com/toharbarazi/Final-Workshop---CICD.git'
+        dest: /home/centos/app
+        version: master
+
+    - name: Build Docker image
+      ansible.builtin.shell:
+        chdir: /home/centos/app
+        cmd: docker build -t your-app-name .
+
+    - name: Run Docker container
+      ansible.builtin.shell:
+        chdir: /home/centos/app
+        cmd: docker run -d -p 80:80 your-app-name
+
+
